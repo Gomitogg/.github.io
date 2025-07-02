@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Contraseñas Seguro</title>
+    <title>Gestor de Contraseñas Seguro con 2FA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,6 +41,9 @@
         .validation-item.invalid {
             color: #ef4444; /* red-500 */
         }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -52,11 +55,11 @@
         <div id="create-vault-view" class="view-state">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">Crea tu Bóveda Segura</h2>
-                <p class="text-gray-600 mb-6">Establece una Contraseña Maestra. Será la única forma de acceder a tus datos. ¡No la olvides!</p>
+                <p class="text-gray-600 mb-6">Establece un email y una Contraseña Maestra. ¡No los olvides!</p>
                 <form id="create-vault-form">
+                    <input type="email" id="new-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                     <input type="password" id="new-master-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                     
-                    <!-- Requisitos de Contraseña -->
                     <div id="password-requirements" class="text-left space-y-2 mb-4">
                         <div id="req-length" class="validation-item invalid">
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
@@ -93,12 +96,13 @@
         <div id="unlock-vault-view" class="view-state">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
                 <h2 class="text-3xl font-bold text-gray-900 mb-2">Desbloquear Bóveda</h2>
-                <p class="text-gray-600 mb-6">Introduce tu Contraseña Maestra.</p>
+                <p class="text-gray-600 mb-6">Introduce tu email y Contraseña Maestra.</p>
                 <form id="unlock-vault-form">
+                    <input type="email" id="login-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                     <input type="password" id="master-password-input" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Desbloquear</button>
                 </form>
-                 <p id="unlock-error" class="text-red-500 text-sm mt-4" style="display: none;">Contraseña incorrecta.</p>
+                 <p id="unlock-error" class="text-red-500 text-sm mt-4" style="display: none;">Credenciales incorrectas.</p>
             </div>
         </div>
 
@@ -132,12 +136,26 @@
             </main>
         </div>
     </div>
+    
+    <!-- Modal de Verificación 2FA -->
+    <div id="verification-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-center">
+            <h3 class="text-2xl font-bold mb-2">Verificación Requerida</h3>
+            <p class="text-gray-600 mb-6">Se ha enviado un código de seguridad a <b id="user-email-display"></b> para mostrar la contraseña.<br/>(Para esta demo, el código es <b>123456</b>)</p>
+            <input type="text" id="code-input" placeholder="Código de 6 dígitos" class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-center tracking-widest text-lg">
+            <button id="verify-code-btn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Verificar y Mostrar</button>
+            <p id="code-error" class="text-red-500 text-sm mt-2" style="display: none;">Código incorrecto.</p>
+            <button id="cancel-modal-btn" class="mt-4 text-sm text-gray-500 hover:text-gray-700">Cancelar</button>
+        </div>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const createVaultView = document.getElementById('create-vault-view');
             const unlockVaultView = document.getElementById('unlock-vault-view');
             const mainAppView = document.getElementById('main-app-view');
+            const modal = document.getElementById('verification-modal');
             
             const createVaultForm = document.getElementById('create-vault-form');
             const unlockVaultForm = document.getElementById('unlock-vault-form');
@@ -150,11 +168,11 @@
 
             let credentials = [];
             let masterKey = null;
+            let userEmail = null;
+            let activeIndexToReveal = null;
 
             // --- Funciones de Criptografía ---
-            function deriveKey(password, salt) {
-                return CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 1000 });
-            }
+            function deriveKey(password, salt) { return CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 1000 }); }
             function encryptVault(data, key) {
                 const salt = CryptoJS.lib.WordArray.random(128 / 8);
                 const derivedKey = deriveKey(key, salt);
@@ -170,9 +188,7 @@
                     const derivedKey = deriveKey(key, salt);
                     const decrypted = CryptoJS.AES.decrypt(encrypted, derivedKey, { iv: iv, padding: CryptoJS.pad.Pkcs7, mode: CryptoJS.mode.CBC });
                     return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
-                } catch (e) {
-                    return null;
-                }
+                } catch (e) { return null; }
             }
 
             // --- Lógica de la Aplicación ---
@@ -222,7 +238,6 @@
                 return card;
             }
             
-            // --- Validación de Contraseña ---
             function validatePassword(password) {
                 const validations = {
                     length: password.length >= 8,
@@ -232,15 +247,24 @@
                     special: /[.,\-_!@#$%^&*()+=]/.test(password),
                     consecutive: !/(01|12|23|34|45|56|67|78|89)/.test(password)
                 };
-
-                // Actualizar UI
                 for (const key in validations) {
                     const el = document.getElementById(`req-${key}`);
                     el.classList.toggle('valid', validations[key]);
                     el.classList.toggle('invalid', !validations[key]);
                 }
-
                 return Object.values(validations).every(Boolean);
+            }
+
+            function showView(viewId) {
+                document.querySelectorAll('.view-state').forEach(v => v.style.display = 'none');
+                document.getElementById(viewId).style.display = 'block';
+            }
+
+            if (!localStorage.getItem('userEmail') || !localStorage.getItem('secureVault')) {
+                showView('create-vault-view');
+                validatePassword('');
+            } else {
+                showView('unlock-vault-view');
             }
 
             newMasterPasswordInput.addEventListener('input', () => {
@@ -249,27 +273,15 @@
                 createVaultBtn.disabled = !isValid;
             });
 
-            // --- Flujo de Vistas ---
-            function showView(viewId) {
-                document.querySelectorAll('.view-state').forEach(v => v.style.display = 'none');
-                document.getElementById(viewId).style.display = 'block';
-            }
-
-            if (!localStorage.getItem('secureVault')) {
-                showView('create-vault-view');
-                validatePassword(''); // Inicializar la UI de validación
-            } else {
-                showView('unlock-vault-view');
-            }
-
-            // --- Event Listeners ---
             createVaultForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                userEmail = document.getElementById('new-email').value;
                 masterKey = newMasterPasswordInput.value;
                 if (!validatePassword(masterKey)) {
                     alert('La contraseña maestra no cumple con los requisitos de seguridad.');
                     return;
                 }
+                localStorage.setItem('userEmail', userEmail);
                 credentials = [];
                 saveAndEncrypt();
                 showView('main-app-view');
@@ -278,18 +290,26 @@
 
             unlockVaultForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                masterKey = document.getElementById('master-password-input').value;
+                const email = document.getElementById('login-email').value;
+                const key = document.getElementById('master-password-input').value;
+                
+                if (email !== localStorage.getItem('userEmail')) {
+                    unlockError.style.display = 'block';
+                    return;
+                }
+                
                 const encryptedVault = localStorage.getItem('secureVault');
-                const decrypted = decryptVault(encryptedVault, masterKey);
+                const decrypted = decryptVault(encryptedVault, key);
 
                 if (decrypted) {
+                    masterKey = key;
+                    userEmail = email;
                     credentials = decrypted;
                     showView('main-app-view');
                     renderCredentials();
                     unlockError.style.display = 'none';
                 } else {
                     unlockError.style.display = 'block';
-                    masterKey = null;
                 }
             });
 
@@ -318,16 +338,63 @@
                 
                 const viewBtn = e.target.closest('.view-btn');
                 if (viewBtn) {
-                    const index = parseInt(viewBtn.dataset.index, 10);
-                    const passElement = document.getElementById(`pass-${index}`);
-                    if (passElement.textContent === '••••••••') {
-                        passElement.textContent = credentials[index].password;
-                    } else {
-                        passElement.textContent = '••••••••';
-                    }
+                    activeIndexToReveal = parseInt(viewBtn.dataset.index, 10);
+                    openVerificationModal();
                 }
             });
+
+            // --- Lógica del Modal 2FA ---
+            const codeInput = document.getElementById('code-input');
+            const codeError = document.getElementById('code-error');
+
+            function openVerificationModal() {
+                document.getElementById('user-email-display').textContent = userEmail;
+                codeInput.value = '';
+                codeError.style.display = 'none';
+                modal.classList.remove('hidden');
+            }
+
+            function closeVerificationModal() {
+                modal.classList.add('hidden');
+                activeIndexToReveal = null;
+            }
+
+            document.getElementById('verify-code-btn').addEventListener('click', () => {
+                if (codeInput.value === '123456') {
+                    revealPassword(activeIndexToReveal);
+                    closeVerificationModal();
+                } else {
+                    codeError.style.display = 'block';
+                }
+            });
+            
+            document.getElementById('cancel-modal-btn').addEventListener('click', closeVerificationModal);
+
+            function revealPassword(index) {
+                const passElement = document.getElementById(`pass-${index}`);
+                if (!passElement) return;
+                
+                const originalPassword = credentials[index].password;
+                passElement.textContent = originalPassword;
+                passElement.classList.add('text-indigo-600', 'font-bold');
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>`;
+                copyBtn.className = 'copy-btn text-gray-400 hover:text-indigo-600 transition-colors';
+                copyBtn.onclick = () => {
+                    navigator.clipboard.writeText(originalPassword).then(() => {
+                        alert('¡Contraseña copiada!');
+                    });
+                };
+                passElement.parentNode.insertBefore(copyBtn, passElement.nextSibling);
+
+                setTimeout(() => {
+                    passElement.textContent = '••••••••';
+                    passElement.classList.remove('text-indigo-600', 'font-bold');
+                    copyBtn.remove();
+                }, 15000);
+            }
         });
     </script>
 </body>
-</html> 
+</html>
