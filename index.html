@@ -66,6 +66,7 @@
                     <input type="password" id="login-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Entrar</button>
                     <p id="login-error" class="text-red-500 text-sm mt-4 text-center" style="display: none;">Credenciales incorrectas.</p>
+                    <a href="#" id="forgot-password-link" class="block text-center text-sm text-indigo-600 hover:underline mt-4">¿Olvidaste tu contraseña?</a>
                 </form>
 
                 <!-- Formulario de Registro -->
@@ -102,6 +103,19 @@
                     <button id="register-btn" type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400" disabled>Crear Cuenta</button>
                     <p id="register-error" class="text-red-500 text-sm mt-4 text-center" style="display: none;"></p>
                 </form>
+            </div>
+        </div>
+
+        <!-- Vista de Desbloqueo de Bóveda -->
+        <div id="unlock-vault-view" class="view-state">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Desbloquear Bóveda</h2>
+                <p class="text-gray-600 mb-6">Sesión activa como <b id="unlock-email-display"></b>. Introduce tu Contraseña Maestra.</p>
+                <form id="unlock-vault-form">
+                    <input type="password" id="master-password-input" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Desbloquear</button>
+                </form>
+                 <p id="unlock-error" class="text-red-500 text-sm mt-4" style="display: none;">Contraseña incorrecta.</p>
             </div>
         </div>
 
@@ -159,6 +173,7 @@
             signInWithEmailAndPassword, 
             onAuthStateChanged,
             sendEmailVerification,
+            sendPasswordResetEmail,
             signOut
         } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
@@ -182,9 +197,11 @@
 
         // --- Elementos de la UI ---
         const authView = document.getElementById('auth-view');
+        const unlockVaultView = document.getElementById('unlock-vault-view');
         const mainAppView = document.getElementById('main-app-view');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
+        const unlockVaultForm = document.getElementById('unlock-vault-form');
         const loginTab = document.getElementById('login-tab');
         const registerTab = document.getElementById('register-tab');
         const credentialForm = document.getElementById('credential-form');
@@ -194,8 +211,9 @@
         const modal = document.getElementById('verification-modal');
         const registerPasswordInput = document.getElementById('register-password');
         const registerBtn = document.getElementById('register-btn');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
 
-        let masterKey = null; // La contraseña maestra ahora es la del usuario de Firebase
+        let masterKey = null; 
         let credentials = [];
         let activeIndexToReveal = null;
 
@@ -221,27 +239,49 @@
 
         // --- Lógica de la Base de Datos (Firestore) ---
         async function saveVault(userId, data, key) {
+            if (!key) return;
             const encryptedVault = encryptVault(data, key);
             const userDocRef = doc(db, "vaults", userId);
-            await setDoc(userDocRef, { vault: encryptedVault });
+            try {
+                await setDoc(userDocRef, { vault: encryptedVault });
+            } catch(error) {
+                if (error.code === 'unavailable') {
+                    alert("Error de Conexión: No se pudo guardar en la base de datos. Por favor, revisa la configuración de Firestore en tu proyecto de Firebase.");
+                } else {
+                    alert("Ha ocurrido un error al guardar tus datos.");
+                }
+                console.error("Error al guardar la bóveda:", error);
+            }
         }
 
         async function loadVault(userId, key) {
             const userDocRef = doc(db, "vaults", userId);
-            const docSnap = await getDoc(userDocRef);
-            if (docSnap.exists()) {
-                const encryptedVault = docSnap.data().vault;
-                const decrypted = decryptVault(encryptedVault, key);
-                if (decrypted) {
-                    credentials = decrypted;
-                    renderCredentials();
+            try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    const encryptedVault = docSnap.data().vault;
+                    const decrypted = decryptVault(encryptedVault, key);
+                    if (decrypted) {
+                        credentials = decrypted;
+                        renderCredentials();
+                        return true;
+                    } else {
+                        return false;
+                    }
                 } else {
-                    alert("Contraseña maestra incorrecta. La sesión se cerrará.");
-                    signOut(auth);
+                    credentials = [];
+                    renderCredentials();
+                    return true;
                 }
-            } else {
-                credentials = [];
-                renderCredentials();
+            } catch (error) {
+                if (error.code === 'unavailable') {
+                    alert("Error de Conexión: No se pudo conectar a la base de datos. Por favor, asegúrate de haber creado y activado Firestore Database en tu proyecto de Firebase y que las reglas de seguridad estén en modo de prueba.");
+                } else {
+                    alert("Ha ocurrido un error al cargar tus datos.");
+                }
+                console.error("Error al cargar la bóveda:", error);
+                signOut(auth);
+                return false;
             }
         }
 
@@ -319,10 +359,8 @@
         // --- Lógica de Autenticación de Firebase ---
         onAuthStateChanged(auth, user => {
             if (user) {
-                if(masterKey) { 
-                    document.getElementById('welcome-email').textContent = user.email;
-                    showView('main-app-view');
-                }
+                document.getElementById('unlock-email-display').textContent = user.email;
+                showView('unlock-vault-view');
             } else {
                 showView('auth-view');
                 masterKey = null;
@@ -346,16 +384,30 @@
                     signOut(auth);
                     return;
                 }
-
-                masterKey = password;
-                await loadVault(userCredential.user.uid, masterKey);
-                showView('main-app-view');
-                document.getElementById('welcome-email').textContent = userCredential.user.email;
-
+                
+                // onAuthStateChanged se encargará de mostrar la vista de desbloqueo
             } catch (error) {
                 errorEl.textContent = "Email o contraseña incorrectos.";
                 errorEl.style.display = 'block';
-                console.error("Error de inicio de sesión:", error.code, error.message);
+            }
+        });
+        
+        unlockVaultForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const key = document.getElementById('master-password-input').value;
+            const user = auth.currentUser;
+            const errorEl = document.getElementById('unlock-error');
+            errorEl.style.display = 'none';
+
+            if (user) {
+                const success = await loadVault(user.uid, key);
+                if (success) {
+                    masterKey = key;
+                    document.getElementById('welcome-email').textContent = user.email;
+                    showView('main-app-view');
+                } else {
+                    errorEl.style.display = 'block';
+                }
             }
         });
 
@@ -380,12 +432,32 @@
             } catch (error) {
                 errorEl.textContent = "Error al registrar: " + error.message;
                 errorEl.style.display = 'block';
-                console.error("Error de registro:", error.code, error.message);
             }
         });
 
         logoutBtn.addEventListener('click', () => {
             signOut(auth);
+            masterKey = null;
+            credentials = [];
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            showView('auth-view');
+        });
+
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            if (!email) {
+                alert("Por favor, introduce tu email en el campo de arriba para restablecer la contraseña.");
+                return;
+            }
+            sendPasswordResetEmail(auth, email)
+                .then(() => {
+                    alert("Se ha enviado un enlace para restablecer tu contraseña a tu email.");
+                })
+                .catch((error) => {
+                    alert("Error: " + error.message);
+                });
         });
 
         // --- Event Listeners Generales ---
