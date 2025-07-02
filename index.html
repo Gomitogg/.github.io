@@ -319,11 +319,10 @@
         // --- Lógica de Autenticación de Firebase ---
         onAuthStateChanged(auth, user => {
             if (user) {
-                if(masterKey) { // Si ya tenemos la master key, estamos listos
+                if(masterKey) { 
                     document.getElementById('welcome-email').textContent = user.email;
                     showView('main-app-view');
                 }
-                // si no, esperará a que el usuario la introduzca para descifrar
             } else {
                 showView('auth-view');
                 masterKey = null;
@@ -339,10 +338,22 @@
             errorEl.style.display = 'none';
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                
+                if (!userCredential.user.emailVerified) {
+                    errorEl.textContent = "Tu cuenta no ha sido verificada. Revisa tu email.";
+                    errorEl.style.display = 'block';
+                    signOut(auth);
+                    return;
+                }
+
                 masterKey = password;
-                await loadVault(auth.currentUser.uid, masterKey);
+                await loadVault(userCredential.user.uid, masterKey);
+                showView('main-app-view');
+                document.getElementById('welcome-email').textContent = userCredential.user.email;
+
             } catch (error) {
+                errorEl.textContent = "Email o contraseña incorrectos.";
                 errorEl.style.display = 'block';
                 console.error("Error de inicio de sesión:", error.code, error.message);
             }
@@ -363,12 +374,11 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await sendEmailVerification(userCredential.user);
-                alert("¡Registro exitoso! Se ha enviado un enlace de verificación a tu email. Por favor, verifica tu correo antes de iniciar sesión.");
+                alert("¡Registro exitoso! Revisa tu email para activar tu cuenta antes de iniciar sesión.");
                 await saveVault(userCredential.user.uid, [], password);
-                // Cambiar a la pestaña de login
                 loginTab.click();
             } catch (error) {
-                errorEl.textContent = error.message;
+                errorEl.textContent = "Error al registrar: " + error.message;
                 errorEl.style.display = 'block';
                 console.error("Error de registro:", error.code, error.message);
             }
@@ -421,6 +431,7 @@
             registerForm.style.display = 'block';
             registerTab.classList.add('border-indigo-600', 'text-indigo-600');
             loginTab.classList.remove('border-indigo-600', 'text-indigo-600');
+            validatePassword('');
         });
 
         // --- Lógica del Modal 2FA ---
@@ -457,11 +468,6 @@
 
         // --- Inicialización de la App ---
         showView('auth-view');
-        // FIX: Mover la llamada a validatePassword para que se ejecute solo cuando el formulario de registro es visible
-        if (registerForm.style.display === 'block') {
-            validatePassword('');
-        }
-        registerTab.addEventListener('click', () => validatePassword(''));
     </script>
 </body>
 </html>
