@@ -74,7 +74,30 @@
                     <input type="email" id="register-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
                     <input type="password" id="register-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
                     <div id="password-requirements" class="text-left space-y-2 mb-4">
-                        <!-- Requisitos de contraseña se insertan aquí -->
+                        <div id="req-length" class="validation-item invalid">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Mínimo 8 caracteres</span>
+                        </div>
+                        <div id="req-uppercase" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos una mayúscula (A-Z)</span>
+                        </div>
+                        <div id="req-lowercase" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos una minúscula (a-z)</span>
+                        </div>
+                        <div id="req-number" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos un número (0-9)</span>
+                        </div>
+                        <div id="req-special" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos un símbolo especial (.-_ etc.)</span>
+                        </div>
+                        <div id="req-consecutive" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Sin números consecutivos (ej. 12, 89)</span>
+                        </div>
                     </div>
                     <button id="register-btn" type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400" disabled>Crear Cuenta</button>
                     <p id="register-error" class="text-red-500 text-sm mt-4 text-center" style="display: none;"></p>
@@ -146,7 +169,7 @@
           apiKey: "AIzaSyDs_nh72eTpun9zJPYaLg0fBSjZIu8LhIE",
           authDomain: "gestor-de-contra.firebaseapp.com",
           projectId: "gestor-de-contra",
-          storageBucket: "gestor-de-contra.firebasestorage.app",
+          storageBucket: "gestor-de-contra.appspot.com",
           messagingSenderId: "688392677195",
           appId: "1:688392677195:web:2fb330391ac1df908ceace",
           measurementId: "G-EJ96HX43CC"
@@ -169,6 +192,8 @@
         const emptyState = document.getElementById('empty-state');
         const logoutBtn = document.getElementById('logout-btn');
         const modal = document.getElementById('verification-modal');
+        const registerPasswordInput = document.getElementById('register-password');
+        const registerBtn = document.getElementById('register-btn');
 
         let masterKey = null; // La contraseña maestra ahora es la del usuario de Firebase
         let credentials = [];
@@ -266,6 +291,31 @@
             document.getElementById(viewId).style.display = 'block';
         }
 
+        function validatePassword(password) {
+            const validations = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[.,\-_!@#$%^&*()+=]/.test(password),
+                consecutive: !/(01|12|23|34|45|56|67|78|89)/.test(password)
+            };
+            for (const key in validations) {
+                const el = document.getElementById(`req-${key}`);
+                if (el) {
+                    el.classList.toggle('valid', validations[key]);
+                    el.classList.toggle('invalid', !validations[key]);
+                }
+            }
+            return Object.values(validations).every(Boolean);
+        }
+        
+        registerPasswordInput.addEventListener('input', () => {
+            const password = registerPasswordInput.value;
+            const isValid = validatePassword(password);
+            registerBtn.disabled = !isValid;
+        });
+
         // --- Lógica de Autenticación de Firebase ---
         onAuthStateChanged(auth, user => {
             if (user) {
@@ -304,6 +354,11 @@
             const password = document.getElementById('register-password').value;
             const errorEl = document.getElementById('register-error');
             errorEl.style.display = 'none';
+
+            if (!validatePassword(password)) {
+                alert('La contraseña no cumple los requisitos.');
+                return;
+            }
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -399,6 +454,14 @@
             if (!passElement) return;
             passElement.textContent = credentials[index].password;
         }
+
+        // --- Inicialización de la App ---
+        showView('auth-view');
+        // FIX: Mover la llamada a validatePassword para que se ejecute solo cuando el formulario de registro es visible
+        if (registerForm.style.display === 'block') {
+            validatePassword('');
+        }
+        registerTab.addEventListener('click', () => validatePassword(''));
     </script>
 </body>
 </html>
