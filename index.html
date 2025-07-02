@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Contraseñas Seguro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Librería de Criptografía CryptoJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .view-state {
+            display: none;
+        }
+        .view-state.visible {
+            display: block;
+        }
+        .validation-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            transition: color 0.3s;
+        }
+        .validation-item.valid {
+            color: #10b981; /* green-500 */
+        }
+        .validation-item.invalid {
+            color: #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Contenedor Principal -->
+    <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-4xl">
+        
+        <!-- Vista de Creación de Bóveda -->
+        <div id="create-vault-view" class="view-state">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Crea tu Bóveda Segura</h2>
+                <p class="text-gray-600 mb-6">Establece una Contraseña Maestra. Será la única forma de acceder a tus datos. ¡No la olvides!</p>
+                <form id="create-vault-form">
+                    <input type="password" id="new-master-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    
+                    <!-- Requisitos de Contraseña -->
+                    <div id="password-requirements" class="text-left space-y-2 mb-4">
+                        <div id="req-length" class="validation-item invalid">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Mínimo 8 caracteres</span>
+                        </div>
+                        <div id="req-uppercase" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos una mayúscula (A-Z)</span>
+                        </div>
+                        <div id="req-lowercase" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos una minúscula (a-z)</span>
+                        </div>
+                        <div id="req-number" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos un número (0-9)</span>
+                        </div>
+                        <div id="req-special" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Al menos un símbolo especial (.-_ etc.)</span>
+                        </div>
+                        <div id="req-consecutive" class="validation-item invalid">
+                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            <span>Sin números consecutivos (ej. 12, 89)</span>
+                        </div>
+                    </div>
+                    
+                    <button id="create-vault-btn" type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Crear Bóveda</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Vista de Desbloqueo de Bóveda -->
+        <div id="unlock-vault-view" class="view-state">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Desbloquear Bóveda</h2>
+                <p class="text-gray-600 mb-6">Introduce tu Contraseña Maestra.</p>
+                <form id="unlock-vault-form">
+                    <input type="password" id="master-password-input" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Desbloquear</button>
+                </form>
+                 <p id="unlock-error" class="text-red-500 text-sm mt-4" style="display: none;">Contraseña incorrecta.</p>
+            </div>
+        </div>
+
+        <!-- Vista Principal de la Aplicación -->
+        <div id="main-app-view" class="view-state">
+            <header class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Bóveda de Contraseñas</h1>
+                <p class="text-lg text-gray-600 mt-2">Tus credenciales, cifradas y seguras</p>
+            </header>
+
+            <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1">
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-900">Añadir Credencial</h2>
+                        <form id="credential-form" class="space-y-4">
+                            <input type="text" id="service-name" placeholder="Nombre del Servicio" required class="w-full p-3 border border-gray-300 rounded-lg">
+                            <input type="text" id="username" placeholder="Email o Usuario" required class="w-full p-3 border border-gray-300 rounded-lg">
+                            <input type="password" id="password" placeholder="Contraseña" required class="w-full p-3 border border-gray-300 rounded-lg">
+                            <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-900">Tus Credenciales</h2>
+                    <div id="credential-list" class="space-y-4">
+                        <div id="empty-state" class="text-center py-10 px-6 bg-white rounded-xl shadow-lg">
+                            <p class="mt-1 text-sm text-gray-500">Añade tu primera credencial para empezar.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const createVaultView = document.getElementById('create-vault-view');
+            const unlockVaultView = document.getElementById('unlock-vault-view');
+            const mainAppView = document.getElementById('main-app-view');
+            
+            const createVaultForm = document.getElementById('create-vault-form');
+            const unlockVaultForm = document.getElementById('unlock-vault-form');
+            const credentialForm = document.getElementById('credential-form');
+            const credentialList = document.getElementById('credential-list');
+            const emptyState = document.getElementById('empty-state');
+            const unlockError = document.getElementById('unlock-error');
+            const newMasterPasswordInput = document.getElementById('new-master-password');
+            const createVaultBtn = document.getElementById('create-vault-btn');
+
+            let credentials = [];
+            let masterKey = null;
+
+            // --- Funciones de Criptografía ---
+            function deriveKey(password, salt) {
+                return CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 1000 });
+            }
+            function encryptVault(data, key) {
+                const salt = CryptoJS.lib.WordArray.random(128 / 8);
+                const derivedKey = deriveKey(key, salt);
+                const iv = CryptoJS.lib.WordArray.random(128 / 8);
+                const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), derivedKey, { iv: iv, padding: CryptoJS.pad.Pkcs7, mode: CryptoJS.mode.CBC });
+                return salt.toString() + iv.toString() + encrypted.toString();
+            }
+            function decryptVault(encryptedData, key) {
+                try {
+                    const salt = CryptoJS.enc.Hex.parse(encryptedData.substr(0, 32));
+                    const iv = CryptoJS.enc.Hex.parse(encryptedData.substr(32, 32));
+                    const encrypted = encryptedData.substring(64);
+                    const derivedKey = deriveKey(key, salt);
+                    const decrypted = CryptoJS.AES.decrypt(encrypted, derivedKey, { iv: iv, padding: CryptoJS.pad.Pkcs7, mode: CryptoJS.mode.CBC });
+                    return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            // --- Lógica de la Aplicación ---
+            function saveAndEncrypt() {
+                if (!masterKey) return;
+                const encryptedVault = encryptVault(credentials, masterKey);
+                localStorage.setItem('secureVault', encryptedVault);
+            }
+
+            function renderCredentials() {
+                credentialList.innerHTML = '';
+                if (credentials.length === 0) {
+                    credentialList.appendChild(emptyState);
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    credentials.forEach((cred, index) => {
+                        const card = createCredentialCard(cred, index);
+                        credentialList.appendChild(card);
+                    });
+                }
+            }
+
+            function createCredentialCard(cred, index) {
+                const card = document.createElement('div');
+                card.className = 'card bg-white p-5 rounded-xl shadow-md flex items-center justify-between';
+                card.innerHTML = `
+                    <div class="flex items-center gap-4 overflow-hidden">
+                        <div class="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
+                            ${cred.serviceName.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="font-semibold text-lg text-gray-900 truncate">${cred.serviceName}</p>
+                            <p class="text-sm text-gray-500 truncate">${cred.username}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+                        <div id="pass-${index}" class="text-gray-700 font-mono tracking-wider">••••••••</div>
+                        <button data-index="${index}" class="view-btn text-gray-400 hover:text-indigo-600 transition-colors">
+                           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </button>
+                        <button data-index="${index}" class="delete-btn text-gray-400 hover:text-red-500 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                `;
+                return card;
+            }
+            
+            // --- Validación de Contraseña ---
+            function validatePassword(password) {
+                const validations = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    lowercase: /[a-z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[.,\-_!@#$%^&*()+=]/.test(password),
+                    consecutive: !/(01|12|23|34|45|56|67|78|89)/.test(password)
+                };
+
+                // Actualizar UI
+                for (const key in validations) {
+                    const el = document.getElementById(`req-${key}`);
+                    el.classList.toggle('valid', validations[key]);
+                    el.classList.toggle('invalid', !validations[key]);
+                }
+
+                return Object.values(validations).every(Boolean);
+            }
+
+            newMasterPasswordInput.addEventListener('input', () => {
+                const password = newMasterPasswordInput.value;
+                const isValid = validatePassword(password);
+                createVaultBtn.disabled = !isValid;
+            });
+
+            // --- Flujo de Vistas ---
+            function showView(viewId) {
+                document.querySelectorAll('.view-state').forEach(v => v.style.display = 'none');
+                document.getElementById(viewId).style.display = 'block';
+            }
+
+            if (!localStorage.getItem('secureVault')) {
+                showView('create-vault-view');
+                validatePassword(''); // Inicializar la UI de validación
+            } else {
+                showView('unlock-vault-view');
+            }
+
+            // --- Event Listeners ---
+            createVaultForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                masterKey = newMasterPasswordInput.value;
+                if (!validatePassword(masterKey)) {
+                    alert('La contraseña maestra no cumple con los requisitos de seguridad.');
+                    return;
+                }
+                credentials = [];
+                saveAndEncrypt();
+                showView('main-app-view');
+                renderCredentials();
+            });
+
+            unlockVaultForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                masterKey = document.getElementById('master-password-input').value;
+                const encryptedVault = localStorage.getItem('secureVault');
+                const decrypted = decryptVault(encryptedVault, masterKey);
+
+                if (decrypted) {
+                    credentials = decrypted;
+                    showView('main-app-view');
+                    renderCredentials();
+                    unlockError.style.display = 'none';
+                } else {
+                    unlockError.style.display = 'block';
+                    masterKey = null;
+                }
+            });
+
+            credentialForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newCredential = {
+                    serviceName: document.getElementById('service-name').value,
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value,
+                };
+                credentials.push(newCredential);
+                saveAndEncrypt();
+                renderCredentials();
+                credentialForm.reset();
+            });
+
+            credentialList.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    const index = parseInt(deleteBtn.dataset.index, 10);
+                    credentials.splice(index, 1);
+                    saveAndEncrypt();
+                    renderCredentials();
+                    return;
+                }
+                
+                const viewBtn = e.target.closest('.view-btn');
+                if (viewBtn) {
+                    const index = parseInt(viewBtn.dataset.index, 10);
+                    const passElement = document.getElementById(`pass-${index}`);
+                    if (passElement.textContent === '••••••••') {
+                        passElement.textContent = credentials[index].password;
+                    } else {
+                        passElement.textContent = '••••••••';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
