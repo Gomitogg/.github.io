@@ -543,10 +543,16 @@
         });
 
         // --- Lógica del Modal 2FA ---
+        const sendCodeBtn = document.getElementById('send-code-btn');
+        const verifyCodeBtn = document.getElementById('verify-code-btn');
         const codeInput = document.getElementById('code-input');
         const codeError = document.getElementById('code-error');
+        const sendCodeStep = document.getElementById('send-code-step');
+        const enterCodeStep = document.getElementById('enter-code-step');
 
         function openVerificationModal() {
+            sendCodeStep.style.display = 'block';
+            enterCodeStep.style.display = 'none';
             codeInput.value = '';
             codeError.style.display = 'none';
             modal.classList.remove('hidden');
@@ -557,12 +563,46 @@
             activeIndexToReveal = null;
         }
 
-        document.getElementById('verify-code-btn').addEventListener('click', () => {
-            if (codeInput.value === '123456') {
-                revealPassword(activeIndexToReveal);
-                closeVerificationModal();
-            } else {
-                codeError.style.display = 'block';
+        sendCodeBtn.addEventListener('click', async () => {
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = 'Enviando...';
+            
+            try {
+                const sendVerificationCode = httpsCallable(functions, 'sendVerificationCode');
+                const result = await sendVerificationCode();
+                if (result.data.success) {
+                    sendCodeStep.style.display = 'none';
+                    enterCodeStep.style.display = 'block';
+                } else {
+                    alert('No se pudo enviar el código. Inténtalo de nuevo.');
+                }
+            } catch (error) {
+                console.error("Error al llamar a la función:", error);
+                alert('Error al contactar el servidor de verificación.');
+            } finally {
+                sendCodeBtn.disabled = false;
+                sendCodeBtn.textContent = 'Enviar Código de Verificación';
+            }
+        });
+
+        verifyCodeBtn.addEventListener('click', async () => {
+            const code = codeInput.value;
+            if (!code) return;
+
+            try {
+                const verifyCode = httpsCallable(functions, 'verifyPasswordViewCode');
+                const result = await verifyCode({ code: code });
+                
+                if (result.data.success) {
+                    revealPassword(activeIndexToReveal);
+                    closeVerificationModal();
+                } else {
+                    codeError.style.display = 'block';
+                    codeError.textContent = result.data.error || 'Código incorrecto.';
+                }
+            } catch (error) {
+                console.error("Error al verificar el código:", error);
+                alert('Error al contactar el servidor de verificación.');
             }
         });
         
