@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Contraseñas Seguro con 2FA</title>
+    <title>Gestor de Contraseñas con Autenticación Real (Firebase)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,66 +51,45 @@
     <!-- Contenedor Principal -->
     <div id="app-container" class="container mx-auto p-4 md:p-8 max-w-4xl">
         
-        <!-- Vista de Creación de Bóveda -->
-        <div id="create-vault-view" class="view-state">
-            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">Crea tu Bóveda Segura</h2>
-                <p class="text-gray-600 mb-6">Establece un email y una Contraseña Maestra. ¡No los olvides!</p>
-                <form id="create-vault-form">
-                    <input type="email" id="new-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <input type="password" id="new-master-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    
-                    <div id="password-requirements" class="text-left space-y-2 mb-4">
-                        <div id="req-length" class="validation-item invalid">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                            <span>Mínimo 8 caracteres</span>
-                        </div>
-                        <div id="req-uppercase" class="validation-item invalid">
-                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                            <span>Al menos una mayúscula (A-Z)</span>
-                        </div>
-                        <div id="req-lowercase" class="validation-item invalid">
-                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                            <span>Al menos una minúscula (a-z)</span>
-                        </div>
-                        <div id="req-number" class="validation-item invalid">
-                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                            <span>Al menos un número (0-9)</span>
-                        </div>
-                        <div id="req-special" class="validation-item invalid">
-                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                            <span>Al menos un símbolo especial (.-_ etc.)</span>
-                        </div>
-                        <div id="req-consecutive" class="validation-item invalid">
-                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                            <span>Sin números consecutivos (ej. 12, 89)</span>
-                        </div>
-                    </div>
-                    
-                    <button id="create-vault-btn" type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>Crear Bóveda</button>
-                </form>
-            </div>
-        </div>
+        <!-- Vista de Login/Registro -->
+        <div id="auth-view" class="view-state">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto">
+                <div class="flex border-b mb-6">
+                    <button id="login-tab" class="flex-1 py-2 font-semibold border-b-2 border-indigo-600 text-indigo-600">Iniciar Sesión</button>
+                    <button id="register-tab" class="flex-1 py-2 font-semibold text-gray-500">Registrarse</button>
+                </div>
 
-        <!-- Vista de Desbloqueo de Bóveda -->
-        <div id="unlock-vault-view" class="view-state">
-            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">Desbloquear Bóveda</h2>
-                <p class="text-gray-600 mb-6">Introduce tu email y Contraseña Maestra.</p>
-                <form id="unlock-vault-form">
-                    <input type="email" id="login-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <input type="password" id="master-password-input" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Desbloquear</button>
+                <!-- Formulario de Login -->
+                <form id="login-form">
+                    <h2 class="text-2xl font-bold text-center mb-4">Bienvenido de Nuevo</h2>
+                    <input type="email" id="login-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
+                    <input type="password" id="login-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Entrar</button>
+                    <p id="login-error" class="text-red-500 text-sm mt-4 text-center" style="display: none;">Credenciales incorrectas.</p>
                 </form>
-                 <p id="unlock-error" class="text-red-500 text-sm mt-4" style="display: none;">Credenciales incorrectas.</p>
+
+                <!-- Formulario de Registro -->
+                <form id="register-form" style="display: none;">
+                    <h2 class="text-2xl font-bold text-center mb-4">Crear Cuenta Segura</h2>
+                    <input type="email" id="register-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
+                    <input type="password" id="register-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
+                    <div id="password-requirements" class="text-left space-y-2 mb-4">
+                        <!-- Requisitos de contraseña se insertan aquí -->
+                    </div>
+                    <button id="register-btn" type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400" disabled>Crear Cuenta</button>
+                    <p id="register-error" class="text-red-500 text-sm mt-4 text-center" style="display: none;"></p>
+                </form>
             </div>
         </div>
 
         <!-- Vista Principal de la Aplicación -->
         <div id="main-app-view" class="view-state">
-            <header class="text-center mb-10">
+             <header class="text-center mb-10 relative">
                 <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Bóveda de Contraseñas</h1>
-                <p class="text-lg text-gray-600 mt-2">Tus credenciales, cifradas y seguras</p>
+                <p class="text-lg text-gray-600 mt-2">Bienvenido, <span id="welcome-email" class="font-semibold"></span></p>
+                <button id="logout-btn" class="absolute top-0 right-0 bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors text-sm">
+                    Cerrar Sesión
+                </button>
             </header>
 
             <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -119,7 +98,7 @@
                         <h2 class="text-2xl font-semibold mb-4 text-gray-900">Añadir Credencial</h2>
                         <form id="credential-form" class="space-y-4">
                             <input type="text" id="service-name" placeholder="Nombre del Servicio" required class="w-full p-3 border border-gray-300 rounded-lg">
-                            <input type="text" id="username" placeholder="Email o Usuario" required class="w-full p-3 border border-gray-300 rounded-lg">
+                            <input type="text" id="username" placeholder="Email o Usuario del Servicio" required class="w-full p-3 border border-gray-300 rounded-lg">
                             <input type="password" id="password" placeholder="Contraseña" required class="w-full p-3 border border-gray-300 rounded-lg">
                             <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Guardar</button>
                         </form>
@@ -141,260 +120,285 @@
     <div id="verification-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-center">
             <h3 class="text-2xl font-bold mb-2">Verificación Requerida</h3>
-            <p class="text-gray-600 mb-6">Se ha enviado un código de seguridad a <b id="user-email-display"></b> para mostrar la contraseña.<br/>(Para esta demo, el código es <b>123456</b>)</p>
-            <input type="text" id="code-input" placeholder="Código de 6 dígitos" class="w-full p-3 mb-4 border border-gray-300 rounded-lg text-center tracking-widest text-lg">
-            <button id="verify-code-btn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Verificar y Mostrar</button>
+            <p class="text-gray-600 mb-6">Se ha enviado un código de seguridad a tu email principal para mostrar la contraseña.<br/>(Para esta demo, el código es <b>123456</b>)</p>
+            <input type="text" id="code-input" placeholder="Código de 6 dígitos" class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
+            <button id="verify-code-btn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Verificar</button>
             <p id="code-error" class="text-red-500 text-sm mt-2" style="display: none;">Código incorrecto.</p>
             <button id="cancel-modal-btn" class="mt-4 text-sm text-gray-500 hover:text-gray-700">Cancelar</button>
         </div>
     </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged,
+            sendEmailVerification,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
+        // --- Configuración de Firebase ---
+        // IMPORTANTE: Reemplaza esto con la configuración de tu propio proyecto de Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyDs_nh72eTpun9zJPYaLg0fBSjZIu8LhIE",
+          authDomain: "gestor-de-contra.firebaseapp.com",
+          projectId: "gestor-de-contra",
+          storageBucket: "gestor-de-contra.firebasestorage.app",
+          messagingSenderId: "688392677195",
+          appId: "1:688392677195:web:2fb330391ac1df908ceace",
+          measurementId: "G-EJ96HX43CC"
+        };
+  
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const createVaultView = document.getElementById('create-vault-view');
-            const unlockVaultView = document.getElementById('unlock-vault-view');
-            const mainAppView = document.getElementById('main-app-view');
-            const modal = document.getElementById('verification-modal');
-            
-            const createVaultForm = document.getElementById('create-vault-form');
-            const unlockVaultForm = document.getElementById('unlock-vault-form');
-            const credentialForm = document.getElementById('credential-form');
-            const credentialList = document.getElementById('credential-list');
-            const emptyState = document.getElementById('empty-state');
-            const unlockError = document.getElementById('unlock-error');
-            const newMasterPasswordInput = document.getElementById('new-master-password');
-            const createVaultBtn = document.getElementById('create-vault-btn');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            let credentials = [];
-            let masterKey = null;
-            let userEmail = null;
-            let activeIndexToReveal = null;
+        // --- Elementos de la UI ---
+        const authView = document.getElementById('auth-view');
+        const mainAppView = document.getElementById('main-app-view');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const credentialForm = document.getElementById('credential-form');
+        const credentialList = document.getElementById('credential-list');
+        const emptyState = document.getElementById('empty-state');
+        const logoutBtn = document.getElementById('logout-btn');
+        const modal = document.getElementById('verification-modal');
 
-            // --- Funciones de Criptografía ---
-            function deriveKey(password, salt) { return CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 1000 }); }
-            function encryptVault(data, key) {
-                const salt = CryptoJS.lib.WordArray.random(128 / 8);
+        let masterKey = null; // La contraseña maestra ahora es la del usuario de Firebase
+        let credentials = [];
+        let activeIndexToReveal = null;
+
+        // --- Lógica de Criptografía (sin cambios) ---
+        function deriveKey(password, salt) { return CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 1000 }); }
+        function encryptVault(data, key) {
+            const salt = CryptoJS.lib.WordArray.random(128 / 8);
+            const derivedKey = deriveKey(key, salt);
+            const iv = CryptoJS.lib.WordArray.random(128 / 8);
+            const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), derivedKey, { iv: iv, padding: CryptoJS.pad.Pkcs7, mode: CryptoJS.mode.CBC });
+            return salt.toString() + iv.toString() + encrypted.toString();
+        }
+        function decryptVault(encryptedData, key) {
+            try {
+                const salt = CryptoJS.enc.Hex.parse(encryptedData.substr(0, 32));
+                const iv = CryptoJS.enc.Hex.parse(encryptedData.substr(32, 32));
+                const encrypted = encryptedData.substring(64);
                 const derivedKey = deriveKey(key, salt);
-                const iv = CryptoJS.lib.WordArray.random(128 / 8);
-                const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), derivedKey, { iv: iv, padding: CryptoJS.pad.Pkcs7, mode: CryptoJS.mode.CBC });
-                return salt.toString() + iv.toString() + encrypted.toString();
-            }
-            function decryptVault(encryptedData, key) {
-                try {
-                    const salt = CryptoJS.enc.Hex.parse(encryptedData.substr(0, 32));
-                    const iv = CryptoJS.enc.Hex.parse(encryptedData.substr(32, 32));
-                    const encrypted = encryptedData.substring(64);
-                    const derivedKey = deriveKey(key, salt);
-                    const decrypted = CryptoJS.AES.decrypt(encrypted, derivedKey, { iv: iv, padding: CryptoJS.pad.Pkcs7, mode: CryptoJS.mode.CBC });
-                    return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
-                } catch (e) { return null; }
-            }
+                const decrypted = CryptoJS.AES.decrypt(encrypted, derivedKey, { iv: iv, padding: CryptoJS.pad.Pkcs7, mode: CryptoJS.mode.CBC });
+                return JSON.parse(decrypted.toString(CryptoJS.enc.Utf8));
+            } catch (e) { return null; }
+        }
 
-            // --- Lógica de la Aplicación ---
-            function saveAndEncrypt() {
-                if (!masterKey) return;
-                const encryptedVault = encryptVault(credentials, masterKey);
-                localStorage.setItem('secureVault', encryptedVault);
-            }
+        // --- Lógica de la Base de Datos (Firestore) ---
+        async function saveVault(userId, data, key) {
+            const encryptedVault = encryptVault(data, key);
+            const userDocRef = doc(db, "vaults", userId);
+            await setDoc(userDocRef, { vault: encryptedVault });
+        }
 
-            function renderCredentials() {
-                credentialList.innerHTML = '';
-                if (credentials.length === 0) {
-                    credentialList.appendChild(emptyState);
-                    emptyState.style.display = 'block';
-                } else {
-                    emptyState.style.display = 'none';
-                    credentials.forEach((cred, index) => {
-                        const card = createCredentialCard(cred, index);
-                        credentialList.appendChild(card);
-                    });
-                }
-            }
-
-            function createCredentialCard(cred, index) {
-                const card = document.createElement('div');
-                card.className = 'card bg-white p-5 rounded-xl shadow-md flex items-center justify-between';
-                card.innerHTML = `
-                    <div class="flex items-center gap-4 overflow-hidden">
-                        <div class="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
-                            ${cred.serviceName.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="overflow-hidden">
-                            <p class="font-semibold text-lg text-gray-900 truncate">${cred.serviceName}</p>
-                            <p class="text-sm text-gray-500 truncate">${cred.username}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                        <div id="pass-${index}" class="text-gray-700 font-mono tracking-wider">••••••••</div>
-                        <button data-index="${index}" class="view-btn text-gray-400 hover:text-indigo-600 transition-colors">
-                           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        </button>
-                        <button data-index="${index}" class="delete-btn text-gray-400 hover:text-red-500 transition-colors">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
-                `;
-                return card;
-            }
-            
-            function validatePassword(password) {
-                const validations = {
-                    length: password.length >= 8,
-                    uppercase: /[A-Z]/.test(password),
-                    lowercase: /[a-z]/.test(password),
-                    number: /[0-9]/.test(password),
-                    special: /[.,\-_!@#$%^&*()+=]/.test(password),
-                    consecutive: !/(01|12|23|34|45|56|67|78|89)/.test(password)
-                };
-                for (const key in validations) {
-                    const el = document.getElementById(`req-${key}`);
-                    el.classList.toggle('valid', validations[key]);
-                    el.classList.toggle('invalid', !validations[key]);
-                }
-                return Object.values(validations).every(Boolean);
-            }
-
-            function showView(viewId) {
-                document.querySelectorAll('.view-state').forEach(v => v.style.display = 'none');
-                document.getElementById(viewId).style.display = 'block';
-            }
-
-            if (!localStorage.getItem('userEmail') || !localStorage.getItem('secureVault')) {
-                showView('create-vault-view');
-                validatePassword('');
-            } else {
-                showView('unlock-vault-view');
-            }
-
-            newMasterPasswordInput.addEventListener('input', () => {
-                const password = newMasterPasswordInput.value;
-                const isValid = validatePassword(password);
-                createVaultBtn.disabled = !isValid;
-            });
-
-            createVaultForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                userEmail = document.getElementById('new-email').value;
-                masterKey = newMasterPasswordInput.value;
-                if (!validatePassword(masterKey)) {
-                    alert('La contraseña maestra no cumple con los requisitos de seguridad.');
-                    return;
-                }
-                localStorage.setItem('userEmail', userEmail);
-                credentials = [];
-                saveAndEncrypt();
-                showView('main-app-view');
-                renderCredentials();
-            });
-
-            unlockVaultForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('login-email').value;
-                const key = document.getElementById('master-password-input').value;
-                
-                if (email !== localStorage.getItem('userEmail')) {
-                    unlockError.style.display = 'block';
-                    return;
-                }
-                
-                const encryptedVault = localStorage.getItem('secureVault');
+        async function loadVault(userId, key) {
+            const userDocRef = doc(db, "vaults", userId);
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+                const encryptedVault = docSnap.data().vault;
                 const decrypted = decryptVault(encryptedVault, key);
-
                 if (decrypted) {
-                    masterKey = key;
-                    userEmail = email;
                     credentials = decrypted;
-                    showView('main-app-view');
                     renderCredentials();
-                    unlockError.style.display = 'none';
                 } else {
-                    unlockError.style.display = 'block';
+                    alert("Contraseña maestra incorrecta. La sesión se cerrará.");
+                    signOut(auth);
                 }
-            });
-
-            credentialForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const newCredential = {
-                    serviceName: document.getElementById('service-name').value,
-                    username: document.getElementById('username').value,
-                    password: document.getElementById('password').value,
-                };
-                credentials.push(newCredential);
-                saveAndEncrypt();
+            } else {
+                credentials = [];
                 renderCredentials();
-                credentialForm.reset();
-            });
-
-            credentialList.addEventListener('click', (e) => {
-                const deleteBtn = e.target.closest('.delete-btn');
-                if (deleteBtn) {
-                    const index = parseInt(deleteBtn.dataset.index, 10);
-                    credentials.splice(index, 1);
-                    saveAndEncrypt();
-                    renderCredentials();
-                    return;
-                }
-                
-                const viewBtn = e.target.closest('.view-btn');
-                if (viewBtn) {
-                    activeIndexToReveal = parseInt(viewBtn.dataset.index, 10);
-                    openVerificationModal();
-                }
-            });
-
-            // --- Lógica del Modal 2FA ---
-            const codeInput = document.getElementById('code-input');
-            const codeError = document.getElementById('code-error');
-
-            function openVerificationModal() {
-                document.getElementById('user-email-display').textContent = userEmail;
-                codeInput.value = '';
-                codeError.style.display = 'none';
-                modal.classList.remove('hidden');
             }
+        }
 
-            function closeVerificationModal() {
-                modal.classList.add('hidden');
-                activeIndexToReveal = null;
+        // --- Lógica de la Aplicación ---
+        function renderCredentials() {
+            credentialList.innerHTML = '';
+            if (credentials.length === 0) {
+                credentialList.appendChild(emptyState);
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                credentials.forEach((cred, index) => {
+                    const card = createCredentialCard(cred, index);
+                    credentialList.appendChild(card);
+                });
             }
+        }
 
-            document.getElementById('verify-code-btn').addEventListener('click', () => {
-                if (codeInput.value === '123456') {
-                    revealPassword(activeIndexToReveal);
-                    closeVerificationModal();
-                } else {
-                    codeError.style.display = 'block';
+        function createCredentialCard(cred, index) {
+            const card = document.createElement('div');
+            card.className = 'card bg-white p-5 rounded-xl shadow-md flex items-center justify-between';
+            card.innerHTML = `
+                <div class="flex items-center gap-4 overflow-hidden">
+                    <div class="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
+                        ${cred.serviceName.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="font-semibold text-lg text-gray-900 truncate">${cred.serviceName}</p>
+                        <p class="text-sm text-gray-500 truncate">${cred.username}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+                    <div id="pass-${index}" class="text-gray-700 font-mono tracking-wider">••••••••</div>
+                    <button data-index="${index}" class="view-btn text-gray-400 hover:text-indigo-600 transition-colors">
+                       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    </button>
+                    <button data-index="${index}" class="delete-btn text-gray-400 hover:text-red-500 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            `;
+            return card;
+        }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view-state').forEach(v => v.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+        }
+
+        // --- Lógica de Autenticación de Firebase ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                if(masterKey) { // Si ya tenemos la master key, estamos listos
+                    document.getElementById('welcome-email').textContent = user.email;
+                    showView('main-app-view');
                 }
-            });
-            
-            document.getElementById('cancel-modal-btn').addEventListener('click', closeVerificationModal);
-
-            function revealPassword(index) {
-                const passElement = document.getElementById(`pass-${index}`);
-                if (!passElement) return;
-                
-                const originalPassword = credentials[index].password;
-                passElement.textContent = originalPassword;
-                passElement.classList.add('text-indigo-600', 'font-bold');
-                
-                const copyBtn = document.createElement('button');
-                copyBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>`;
-                copyBtn.className = 'copy-btn text-gray-400 hover:text-indigo-600 transition-colors';
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(originalPassword).then(() => {
-                        alert('¡Contraseña copiada!');
-                    });
-                };
-                passElement.parentNode.insertBefore(copyBtn, passElement.nextSibling);
-
-                setTimeout(() => {
-                    passElement.textContent = '••••••••';
-                    passElement.classList.remove('text-indigo-600', 'font-bold');
-                    copyBtn.remove();
-                }, 15000);
+                // si no, esperará a que el usuario la introduzca para descifrar
+            } else {
+                showView('auth-view');
+                masterKey = null;
+                credentials = [];
             }
         });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.style.display = 'none';
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                masterKey = password;
+                await loadVault(auth.currentUser.uid, masterKey);
+            } catch (error) {
+                errorEl.style.display = 'block';
+                console.error("Error de inicio de sesión:", error.code, error.message);
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const errorEl = document.getElementById('register-error');
+            errorEl.style.display = 'none';
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await sendEmailVerification(userCredential.user);
+                alert("¡Registro exitoso! Se ha enviado un enlace de verificación a tu email. Por favor, verifica tu correo antes de iniciar sesión.");
+                await saveVault(userCredential.user.uid, [], password);
+                // Cambiar a la pestaña de login
+                loginTab.click();
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.style.display = 'block';
+                console.error("Error de registro:", error.code, error.message);
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // --- Event Listeners Generales ---
+        credentialForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newCredential = {
+                serviceName: document.getElementById('service-name').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+            };
+            credentials.push(newCredential);
+            saveVault(auth.currentUser.uid, credentials, masterKey);
+            renderCredentials();
+            credentialForm.reset();
+        });
+
+        credentialList.addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-btn');
+            if (deleteBtn) {
+                const index = parseInt(deleteBtn.dataset.index, 10);
+                credentials.splice(index, 1);
+                saveVault(auth.currentUser.uid, credentials, masterKey);
+                renderCredentials();
+                return;
+            }
+            
+            const viewBtn = e.target.closest('.view-btn');
+            if (viewBtn) {
+                activeIndexToReveal = parseInt(viewBtn.dataset.index, 10);
+                openVerificationModal();
+            }
+        });
+        
+        loginTab.addEventListener('click', () => {
+            loginForm.style.display = 'block';
+            registerForm.style.display = 'none';
+            loginTab.classList.add('border-indigo-600', 'text-indigo-600');
+            registerTab.classList.remove('border-indigo-600', 'text-indigo-600');
+        });
+
+        registerTab.addEventListener('click', () => {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            registerTab.classList.add('border-indigo-600', 'text-indigo-600');
+            loginTab.classList.remove('border-indigo-600', 'text-indigo-600');
+        });
+
+        // --- Lógica del Modal 2FA ---
+        const codeInput = document.getElementById('code-input');
+        const codeError = document.getElementById('code-error');
+
+        function openVerificationModal() {
+            codeInput.value = '';
+            codeError.style.display = 'none';
+            modal.classList.remove('hidden');
+        }
+
+        function closeVerificationModal() {
+            modal.classList.add('hidden');
+            activeIndexToReveal = null;
+        }
+
+        document.getElementById('verify-code-btn').addEventListener('click', () => {
+            if (codeInput.value === '123456') {
+                revealPassword(activeIndexToReveal);
+                closeVerificationModal();
+            } else {
+                codeError.style.display = 'block';
+            }
+        });
+        
+        document.getElementById('cancel-modal-btn').addEventListener('click', closeVerificationModal);
+
+        function revealPassword(index) {
+            const passElement = document.getElementById(`pass-${index}`);
+            if (!passElement) return;
+            passElement.textContent = credentials[index].password;
+        }
     </script>
 </body>
 </html>
