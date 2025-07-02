@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Contraseñas con Autenticación Real (Firebase)</title>
+    <title>Mi Bóveda</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,6 +54,10 @@
         <!-- Vista de Login/Registro -->
         <div id="auth-view" class="view-state">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">🔒 Mi Bóveda</h2>
+                    <p class="text-gray-600 mt-2">Acá podés almacenar tus contraseñas para que no vuelvas a olvidártelas. Tu seguridad es nuestra prioridad.</p>
+                </div>
                 <div class="flex border-b mb-6">
                     <button id="login-tab" class="flex-1 py-2 font-semibold border-b-2 border-indigo-600 text-indigo-600">Iniciar Sesión</button>
                     <button id="register-tab" class="flex-1 py-2 font-semibold text-gray-500">Registrarse</button>
@@ -61,7 +65,6 @@
 
                 <!-- Formulario de Login -->
                 <form id="login-form">
-                    <h2 class="text-2xl font-bold text-center mb-4">Bienvenido de Nuevo</h2>
                     <input type="email" id="login-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
                     <input type="password" id="login-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
                     <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Entrar</button>
@@ -71,7 +74,6 @@
 
                 <!-- Formulario de Registro -->
                 <form id="register-form" style="display: none;">
-                    <h2 class="text-2xl font-bold text-center mb-4">Crear Cuenta Segura</h2>
                     <input type="email" id="register-email" placeholder="Tu email" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
                     <input type="password" id="register-password" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
                     <div id="password-requirements" class="text-left space-y-2 mb-4">
@@ -106,10 +108,25 @@
             </div>
         </div>
 
+        <!-- Vista de Olvidé Contraseña -->
+        <div id="forgot-password-view" class="view-state">
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Restablecer Contraseña</h2>
+                <p class="text-gray-600 mb-6">Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+                <form id="forgot-password-form">
+                    <input type="email" id="forgot-email" placeholder="Tu email registrado" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg">
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700">Enviar Enlace</button>
+                </form>
+                <p id="forgot-success" class="text-green-600 text-sm mt-4" style="display: none;">Enlace enviado. ¡Revisa tu correo!</p>
+                <p id="forgot-error" class="text-red-500 text-sm mt-4" style="display: none;">No se encontró un usuario con ese email.</p>
+                <a href="#" id="back-to-login-link" class="block text-center text-sm text-indigo-600 hover:underline mt-4">Volver a Iniciar Sesión</a>
+            </div>
+        </div>
+
         <!-- Vista de Desbloqueo de Bóveda -->
         <div id="unlock-vault-view" class="view-state">
             <div class="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto text-center">
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">Desbloquear Bóveda</h2>
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">Desbloquear tu Bóveda</h2>
                 <p class="text-gray-600 mb-6">Sesión activa como <b id="unlock-email-display"></b>. Introduce tu Contraseña Maestra.</p>
                 <form id="unlock-vault-form">
                     <input type="password" id="master-password-input" placeholder="Contraseña Maestra" required class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
@@ -122,7 +139,7 @@
         <!-- Vista Principal de la Aplicación -->
         <div id="main-app-view" class="view-state">
              <header class="text-center mb-10 relative">
-                <h1 class="text-4xl md:text-5xl font-bold text-gray-900">Bóveda de Contraseñas</h1>
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-900">🔒 Mi Bóveda</h1>
                 <p class="text-lg text-gray-600 mt-2">Bienvenido, <span id="welcome-email" class="font-semibold"></span></p>
                 <button id="logout-btn" class="absolute top-0 right-0 bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors text-sm">
                     Cerrar Sesión
@@ -179,7 +196,6 @@
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
         // --- Configuración de Firebase ---
-        // IMPORTANTE: Reemplaza esto con la configuración de tu propio proyecto de Firebase
         const firebaseConfig = {
           apiKey: "AIzaSyDs_nh72eTpun9zJPYaLg0fBSjZIu8LhIE",
           authDomain: "gestor-de-contra.firebaseapp.com",
@@ -190,7 +206,6 @@
           measurementId: "G-EJ96HX43CC"
         };
   
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -199,9 +214,11 @@
         const authView = document.getElementById('auth-view');
         const unlockVaultView = document.getElementById('unlock-vault-view');
         const mainAppView = document.getElementById('main-app-view');
+        const forgotPasswordView = document.getElementById('forgot-password-view');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         const unlockVaultForm = document.getElementById('unlock-vault-form');
+        const forgotPasswordForm = document.getElementById('forgot-password-form');
         const loginTab = document.getElementById('login-tab');
         const registerTab = document.getElementById('register-tab');
         const credentialForm = document.getElementById('credential-form');
@@ -212,6 +229,7 @@
         const registerPasswordInput = document.getElementById('register-password');
         const registerBtn = document.getElementById('register-btn');
         const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const backToLoginLink = document.getElementById('back-to-login-link');
 
         let masterKey = null; 
         let credentials = [];
@@ -245,11 +263,7 @@
             try {
                 await setDoc(userDocRef, { vault: encryptedVault });
             } catch(error) {
-                if (error.code === 'unavailable') {
-                    alert("Error de Conexión: No se pudo guardar en la base de datos. Por favor, revisa la configuración de Firestore en tu proyecto de Firebase.");
-                } else {
-                    alert("Ha ocurrido un error al guardar tus datos.");
-                }
+                alert("Error de Conexión: No se pudo guardar en la base de datos.");
                 console.error("Error al guardar la bóveda:", error);
             }
         }
@@ -274,11 +288,7 @@
                     return true;
                 }
             } catch (error) {
-                if (error.code === 'unavailable') {
-                    alert("Error de Conexión: No se pudo conectar a la base de datos. Por favor, asegúrate de haber creado y activado Firestore Database en tu proyecto de Firebase y que las reglas de seguridad estén en modo de prueba.");
-                } else {
-                    alert("Ha ocurrido un error al cargar tus datos.");
-                }
+                alert("Error de Conexión: No se pudo conectar a la base de datos.");
                 console.error("Error al cargar la bóveda:", error);
                 signOut(auth);
                 return false;
@@ -384,10 +394,14 @@
                     signOut(auth);
                     return;
                 }
-                
-                // onAuthStateChanged se encargará de mostrar la vista de desbloqueo
             } catch (error) {
-                errorEl.textContent = "Email o contraseña incorrectos.";
+                if (error.code === 'auth/user-not-found') {
+                    errorEl.textContent = "El email no está registrado.";
+                } else if (error.code === 'auth/wrong-password') {
+                    errorEl.textContent = "Contraseña incorrecta.";
+                } else {
+                    errorEl.textContent = "Error al iniciar sesión.";
+                }
                 errorEl.style.display = 'block';
             }
         });
@@ -446,17 +460,32 @@
 
         forgotPasswordLink.addEventListener('click', (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            if (!email) {
-                alert("Por favor, introduce tu email en el campo de arriba para restablecer la contraseña.");
-                return;
-            }
+            showView('forgot-password-view');
+        });
+        
+        backToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showView('auth-view');
+        });
+
+        forgotPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            const successEl = document.getElementById('forgot-success');
+            const errorEl = document.getElementById('forgot-error');
+            successEl.style.display = 'none';
+            errorEl.style.display = 'none';
+
             sendPasswordResetEmail(auth, email)
                 .then(() => {
-                    alert("Se ha enviado un enlace para restablecer tu contraseña a tu email.");
+                    successEl.style.display = 'block';
                 })
                 .catch((error) => {
-                    alert("Error: " + error.message);
+                    if (error.code === 'auth/user-not-found') {
+                        errorEl.style.display = 'block';
+                    } else {
+                        alert("Error: " + error.message);
+                    }
                 });
         });
 
